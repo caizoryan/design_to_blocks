@@ -13,7 +13,7 @@ struct KeyPressed {
     pressed: bool,
 }
 
-const LIFETIME: i32 = 800;
+const LIFETIME: i32 = 400;
 
 fn main() {
     App::new()
@@ -22,7 +22,7 @@ fn main() {
             ..default()
         })
         .insert_resource(KeyPressed { pressed: false })
-        .insert_resource(ClearColor(Color::rgb(1., 1., 1.)))
+        .insert_resource(ClearColor(Color::rgb(1.0, 1.0, 1.0)))
         .add_plugins(DefaultPlugins)
         .add_plugins(TemporalAntiAliasPlugin)
         .add_plugins(EguiPlugin)
@@ -83,6 +83,19 @@ struct AutoCube {
     life_time: i32,
 }
 
+#[derive(Component)]
+struct AutoSphere {
+    life_time: i32,
+}
+
+impl Default for AutoSphere {
+    fn default() -> Self {
+        AutoSphere {
+            life_time: LIFETIME,
+        }
+    }
+}
+
 impl Default for AutoCube {
     fn default() -> Self {
         AutoCube {
@@ -102,6 +115,22 @@ fn spawn_block(
 ) {
     commands
         .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube {
+                size: rand::thread_rng().gen_range(0.01..0.5),
+            })),
+            material: materials.add(StandardMaterial {
+                base_color: Color::rgb(1.0, 0.7, 0.0),
+                // emissive: Color::rgb(0.8, 0.7, 0.7),
+                perceptual_roughness: 0.08,
+                reflectance: 0.1,
+                ..default()
+            }),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            ..default()
+        })
+        .insert(AutoCube::default());
+    commands
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
                 radius: rand::thread_rng().gen_range(0.01..0.5),
                 ..Default::default()
@@ -116,28 +145,67 @@ fn spawn_block(
             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
             ..default()
         })
-        .insert(AutoCube::default());
+        .insert(AutoSphere::default());
 }
 
 fn update_block(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut commands: Commands,
-    mut blocks: Query<(Entity, &mut AutoCube, &Transform)>,
+    mut blocks: Query<(Entity, &mut AutoCube, &Transform, &Handle<StandardMaterial>)>,
+    mut speheres: Query<(
+        Entity,
+        &mut AutoSphere,
+        &Transform,
+        &Handle<StandardMaterial>,
+    )>,
 ) {
-    for (entity, mut block, transform) in blocks.iter_mut() {
+    for (entity, mut block, transform, material) in speheres.iter_mut() {
         if block.life_time == LIFETIME {
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::UVSphere {
-                        radius: 0.5,
+                        radius: rand::thread_rng().gen_range(0.01..0.5),
                         ..Default::default()
                     })),
                     material: materials.add(StandardMaterial {
-                        base_color: Color::rgb(1., 0.0, 0.0),
+                        base_color: Color::rgb(1., 1.0, 1.0),
                         emissive: Color::rgb(0.2, 0.2, 0.2),
-                        perceptual_roughness: 0.8,
-                        reflectance: 0.3,
+                        ..default()
+                    }),
+                    transform: Transform::from_translation(get_random_direction(
+                        transform.translation,
+                    )),
+                    ..Default::default()
+                })
+                .insert(AutoSphere { ..default() });
+        }
+        let life_percent = block.life_time as f32 / LIFETIME as f32;
+
+        let m = StandardMaterial {
+            base_color: Color::rgb(life_percent, life_percent, life_percent),
+            emissive: Color::rgb(0.2, 0.2, 0.2),
+            perceptual_roughness: 0.8,
+            ..default()
+        };
+        let _ = materials.set(material, m);
+
+        block.life_time -= 1;
+        if block.life_time == 0 {
+            commands.get_entity(entity).unwrap().despawn_recursive();
+        }
+    }
+    // let mut rng = rand::thread_rng();
+    for (entity, mut block, transform, material) in blocks.iter_mut() {
+        if block.life_time == LIFETIME {
+            commands
+                .spawn(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube {
+                        size: rand::thread_rng().gen_range(0.01..0.5),
+                    })),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::rgb(1., 1.0, 1.0),
+                        emissive: Color::rgb(0.2, 0.2, 0.2),
                         ..default()
                     }),
                     transform: Transform::from_translation(get_random_direction(
@@ -147,6 +215,16 @@ fn update_block(
                 })
                 .insert(AutoCube { ..default() });
         }
+        let life_percent = block.life_time as f32 / LIFETIME as f32;
+
+        let m = StandardMaterial {
+            base_color: Color::rgb(life_percent, life_percent, life_percent),
+            emissive: Color::rgb(0.2, 0.2, 0.2),
+            perceptual_roughness: 0.8,
+            ..default()
+        };
+        let _ = materials.set(material, m);
+
         block.life_time -= 1;
         if block.life_time == 0 {
             commands.get_entity(entity).unwrap().despawn_recursive();
@@ -161,7 +239,13 @@ fn get_random_direction(cur: Vec3) -> Vec3 {
     Vec3::new(x, y, z)
 }
 
+const BORDER: f32 = 10.;
+
 fn get_random_f32(c: f32) -> f32 {
     let range: f32 = rand::thread_rng().gen_range(-1.0..1.0);
-    c + range
+    match c + range {
+        y if y > BORDER => BORDER,
+        y if y < -BORDER => -BORDER,
+        _ => c + range,
+    }
 }
