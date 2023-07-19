@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use bevy::{
+    core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
+    pbr::{ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionSettings},
+    prelude::*,
+};
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use egui::Widget;
@@ -9,11 +13,18 @@ struct KeyPressed {
     pressed: bool,
 }
 
+const LIFETIME: i32 = 800;
+
 fn main() {
     App::new()
+        .insert_resource(AmbientLight {
+            brightness: 5.0,
+            ..default()
+        })
         .insert_resource(KeyPressed { pressed: false })
         .insert_resource(ClearColor(Color::rgb(1., 1., 1.)))
         .add_plugins(DefaultPlugins)
+        .add_plugins(TemporalAntiAliasPlugin)
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
@@ -26,18 +37,37 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     // camera
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 10.0)),
-        ..default()
-    });
-
     commands
         .spawn(Camera3dBundle {
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
             transform: Transform::from_translation(Vec3::new(0.0, 100.0, 15.0))
                 .looking_at(Vec3::default(), Vec3::Y),
             ..default()
         })
+        .insert(ScreenSpaceAmbientOcclusionBundle {
+            settings: ScreenSpaceAmbientOcclusionSettings {
+                quality_level: bevy::pbr::ScreenSpaceAmbientOcclusionQualityLevel::High,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(TemporalAntiAliasBundle::default())
         .insert(PanOrbitCamera::default());
+
+    // light
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            shadows_enabled: true,
+            illuminance: 100.,
+            ..default()
+        },
+        transform: Transform::from_translation(Vec3::new(0.0, 100.0, 15.0))
+            .looking_at(Vec3::default(), Vec3::Y),
+        ..Default::default()
+    });
 }
 
 fn keyboard_input_system(keyboard_input: Res<Input<KeyCode>>, mut pressed: ResMut<KeyPressed>) {
@@ -55,7 +85,9 @@ struct AutoCube {
 
 impl Default for AutoCube {
     fn default() -> Self {
-        AutoCube { life_time: 100 }
+        AutoCube {
+            life_time: LIFETIME,
+        }
     }
 }
 
@@ -70,10 +102,16 @@ fn spawn_block(
 ) {
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 5.0 })),
-            material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(StandardMaterial {
+                base_color: Color::rgb(1.0, 0.7, 0.0),
+                // emissive: Color::rgb(0.8, 0.7, 0.7),
+                perceptual_roughness: 0.08,
+                reflectance: 0.1,
+                ..default()
+            }),
             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-            ..Default::default()
+            ..default()
         })
         .insert(AutoCube::default());
 }
@@ -85,11 +123,17 @@ fn update_block(
     mut blocks: Query<(Entity, &mut AutoCube, &Transform)>,
 ) {
     for (entity, mut block, transform) in blocks.iter_mut() {
-        if block.life_time == 100 {
+        if block.life_time == LIFETIME {
             commands
                 .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 5.0 })),
-                    material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
+                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::rgb(1., 0.0, 0.0),
+                        emissive: Color::rgb(0.2, 0.2, 0.2),
+                        perceptual_roughness: 0.8,
+                        reflectance: 0.3,
+                        ..default()
+                    }),
                     transform: Transform::from_translation(get_random_direction(
                         transform.translation,
                     )),
