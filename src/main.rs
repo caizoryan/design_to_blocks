@@ -102,7 +102,10 @@ fn spawn_block(
 ) {
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: rand::thread_rng().gen_range(0.01..0.5),
+                ..Default::default()
+            })),
             material: materials.add(StandardMaterial {
                 base_color: Color::rgb(1.0, 0.7, 0.0),
                 // emissive: Color::rgb(0.8, 0.7, 0.7),
@@ -126,7 +129,10 @@ fn update_block(
         if block.life_time == LIFETIME {
             commands
                 .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    mesh: meshes.add(Mesh::from(shape::UVSphere {
+                        radius: 0.5,
+                        ..Default::default()
+                    })),
                     material: materials.add(StandardMaterial {
                         base_color: Color::rgb(1., 0.0, 0.0),
                         emissive: Color::rgb(0.2, 0.2, 0.2),
