@@ -13,13 +13,13 @@ struct KeyPressed {
     pressed: bool,
 }
 
-const LIFETIME: i32 = 400;
+const LIFETIME: i32 = 2000;
 const SCALE: f32 = 3.;
 
 fn main() {
     App::new()
         .insert_resource(AmbientLight {
-            brightness: 5.0,
+            brightness: 3.0,
             ..default()
         })
         .insert_resource(KeyPressed { pressed: false })
@@ -50,25 +50,13 @@ fn setup(mut commands: Commands) {
         })
         .insert(ScreenSpaceAmbientOcclusionBundle {
             settings: ScreenSpaceAmbientOcclusionSettings {
-                quality_level: bevy::pbr::ScreenSpaceAmbientOcclusionQualityLevel::High,
+                quality_level: bevy::pbr::ScreenSpaceAmbientOcclusionQualityLevel::Ultra,
                 ..default()
             },
             ..default()
         })
         .insert(TemporalAntiAliasBundle::default())
         .insert(PanOrbitCamera::default());
-
-    // light
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            shadows_enabled: true,
-            illuminance: 50.,
-            ..default()
-        },
-        transform: Transform::from_translation(Vec3::new(300.0, 1.0, 15.0) * SCALE)
-            .looking_at(Vec3::default(), Vec3::Y),
-        ..Default::default()
-    });
 }
 
 fn keyboard_input_system(keyboard_input: Res<Input<KeyCode>>, mut pressed: ResMut<KeyPressed>) {
@@ -163,7 +151,7 @@ fn update_block(
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Cube {
-                        size: rand::thread_rng().gen_range(0.01 * SCALE..0.1 * SCALE),
+                        size: rand::thread_rng().gen_range(0.01 * SCALE..0.3 * SCALE),
                     })),
                     material: materials.add(StandardMaterial {
                         base_color: Color::rgb(1., 1.0, 1.0),
@@ -185,9 +173,9 @@ fn update_block(
         let life_percent = block.life_time as f32 / LIFETIME as f32;
 
         let m = StandardMaterial {
-            base_color: Color::rgb(life_percent, 1., 1.),
-            emissive: Color::rgb(0.1, life_percent, 0.1),
-            perceptual_roughness: 0.3,
+            base_color: Color::rgb(life_percent, 0., 0.),
+            emissive: Color::rgb(life_percent, 0.0, 0.0),
+            perceptual_roughness: 0.7,
             ..default()
         };
         let _ = materials.set(material, m);
@@ -207,7 +195,7 @@ fn get_random_direction(cur: Vec3, bounds: Vec3) -> Vec3 {
 }
 
 fn get_random_f32(c: f32, bound: f32) -> f32 {
-    let range: f32 = rand::thread_rng().gen_range(-5.0 * SCALE..5.0 * SCALE);
+    let range: f32 = rand::thread_rng().gen_range(-0.3 * SCALE..0.3 * SCALE);
     match c + range {
         y if y > bound => bound,
         y if y < -bound => -bound,
