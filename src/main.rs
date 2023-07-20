@@ -49,17 +49,39 @@ fn keyboard_input_system(keyboard_input: Res<Input<KeyCode>>, mut pressed: ResMu
     }
 }
 
+#[derive(Clone)]
+pub struct Bounds(Vec3, Vec3);
+
+pub struct Rect {
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+impl Into<Bounds> for Rect {
+    fn into(self) -> Bounds {
+        Bounds(
+            Vec3::new(self.x, self.y, 0.0) * SCALE,
+            Vec3::new(self.x + self.w, self.y + self.h, 0.0) * SCALE,
+        )
+    }
+}
+
 #[derive(Component)]
 pub struct AutoCube {
     pub life_time: i32,
-    pub bounds: Vec3,
+    pub bounds: Bounds,
 }
 
 impl Default for AutoCube {
     fn default() -> Self {
         AutoCube {
             life_time: LIFETIME,
-            bounds: Vec3::new(10.0, 10.0, 10.0) * SCALE,
+            bounds: Bounds(
+                Vec3::new(10.0, 10.0, 10.0) * SCALE,
+                Vec3::new(10.0, 10.0, 10.0) * SCALE,
+            ),
         }
     }
 }

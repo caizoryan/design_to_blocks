@@ -1,7 +1,7 @@
 use bevy::{
     core_pipeline::{
         bloom::{BloomPrefilterSettings, BloomSettings},
-        experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
+        experimental::taa::TemporalAntiAliasBundle,
     },
     pbr::{ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionSettings},
     prelude::*,
@@ -17,19 +17,13 @@ pub fn setup(mut commands: Commands) {
                     hdr: true,
                     ..Default::default()
                 },
-                transform: Transform::from_translation(Vec3::new(0.0, 100.0, 15.0) * crate::SCALE)
-                    .looking_at(Vec3::default(), Vec3::Y),
+                transform: Transform {
+                    translation: Vec3::new(0.0, 0.0, 10.0) * crate::SCALE,
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            BloomSettings {
-                intensity: -4.2,
-                prefilter_settings: BloomPrefilterSettings {
-                    threshold: 0.5,
-                    threshold_softness: 0.5,
-                    ..default()
-                },
-                ..default()
-            },
+            BloomSettings { ..default() },
         ))
         .insert(ScreenSpaceAmbientOcclusionBundle {
             settings: ScreenSpaceAmbientOcclusionSettings {
