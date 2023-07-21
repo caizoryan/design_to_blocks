@@ -1,14 +1,16 @@
+mod egui;
 mod setup;
 mod spawn_block;
 mod update_block;
 mod update_settings;
 
+use egui::update_egui;
 use setup::setup;
 use spawn_block::spawn_block;
 use update_block::update_block;
 
 use bevy::{core_pipeline::experimental::taa::TemporalAntiAliasPlugin, prelude::*};
-use bevy_egui::{egui, EguiContexts, EguiPlugin};
+use bevy_egui::EguiPlugin;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use update_settings::update_bloom_settings;
 
@@ -36,6 +38,7 @@ fn main() {
         .add_systems(Startup, spawn_block)
         .add_systems(FixedUpdate, update_block)
         .add_systems(Update, keyboard_input_system)
+        // .add_systems(Update, update_egui)
         .add_systems(Update, update_bloom_settings)
         .insert_resource(FixedTime::new_from_secs(0.02))
         .run();
