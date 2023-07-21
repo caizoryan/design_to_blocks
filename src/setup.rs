@@ -5,6 +5,7 @@ use bevy::{
     },
     pbr::{ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionSettings},
     prelude::*,
+    render::camera::ScalingMode,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 
@@ -13,6 +14,12 @@ pub fn setup(mut commands: Commands) {
     commands
         .spawn((
             Camera3dBundle {
+                projection: OrthographicProjection {
+                    scale: 3.0,
+                    scaling_mode: ScalingMode::FixedVertical(2.0),
+                    ..default()
+                }
+                .into(),
                 camera: Camera {
                     hdr: true,
                     ..Default::default()
