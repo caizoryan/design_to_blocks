@@ -1,48 +1,37 @@
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{self, Widget},
+    egui::{self},
     EguiContexts,
 };
 
-use crate::AutoCube;
+use crate::Variables;
 
-pub fn update_egui(
-    mut contexts: EguiContexts,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut main_cube_query: Query<&Handle<StandardMaterial>, With<AutoCube>>,
-) {
-    let handle = main_cube_query.single();
-    let mut material = materials.get(handle).unwrap().clone();
-
+pub fn update_egui(mut contexts: EguiContexts, mut variables: ResMut<Variables>) {
     let ctx = contexts.ctx_mut();
 
     egui::Window::new("Cube material preview").show(ctx, |ui| {
         egui::Grid::new("preview").show(ui, |ui| {
             ui.label("Base color:");
-            color_picker_widget(ui, &mut material.base_color);
+            color_picker_widget(ui, &mut variables.base_color);
             ui.end_row();
 
-            ui.label("Emissive:");
-            color_picker_widget(ui, &mut material.emissive);
-            ui.end_row();
+            // ui.label("Emissive:");
+            // color_picker_widget(ui, &mut material.emissive);
+            // ui.end_row();
 
-            ui.label("Perceptual roughness:");
-            egui::Slider::new(&mut material.perceptual_roughness, 0.089..=1.0).ui(ui);
-            ui.end_row();
-
-            ui.label("Reflectance:");
-            egui::Slider::new(&mut material.reflectance, 0.0..=1.0).ui(ui);
-            ui.end_row();
-
+            // ui.label("Perceptual roughness:");
+            // egui::Slider::new(&mut material.perceptual_roughness, 0.089..=1.0).ui(ui);
+            // ui.end_row();
+            //
+            // ui.label("Reflectance:");
+            // egui::Slider::new(&mut material.reflectance, 0.0..=1.0).ui(ui);
+            // ui.end_row();
+            //
             ui.label("Unlit:");
-            ui.checkbox(&mut material.unlit, "");
+            ui.checkbox(&mut variables.playing, "");
             ui.end_row();
         });
     });
-
-    for set_material in main_cube_query.iter_mut() {
-        let _ = materials.set(set_material, material.clone());
-    }
 }
 
 fn color_picker_widget(ui: &mut egui::Ui, color: &mut Color) -> egui::Response {

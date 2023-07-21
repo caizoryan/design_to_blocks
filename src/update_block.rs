@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{AutoCube, Bounds, LIFETIME, SCALE};
+use crate::{AutoCube, Bounds, Temp, LIFETIME, SCALE};
 // a block that will have x lifetime
 // it will spawn a block next to it which will have x life time
 // every iteration the blocks that have full life will spawn a new box
@@ -12,9 +12,13 @@ pub fn update_block(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut commands: Commands,
     mut blocks: Query<(Entity, &mut AutoCube, &Transform, &Handle<StandardMaterial>)>,
+    variables: Res<crate::Variables>,
 ) {
+    if !variables.playing {
+        return;
+    }
     for (entity, mut block, transform, material) in blocks.iter_mut() {
-        if block.life_time == LIFETIME {
+        if block.life_time == variables.life_time {
             // let mut r = rand::thread_rng();
             // let r: f32 = r.gen_range(-90.0..90.0);
             // let random_rotation = Quat::from_euler(
@@ -30,7 +34,7 @@ pub fn update_block(
                         ..default()
                     })),
                     material: materials.add(StandardMaterial {
-                        base_color: Color::rgb(1., 1.0, 1.0),
+                        base_color: variables.base_color,
                         ..default()
                     }),
                     transform: Transform {
@@ -42,14 +46,15 @@ pub fn update_block(
                 })
                 .insert(AutoCube {
                     bounds: block.bounds.clone(),
-                    ..default()
+                    life_time: variables.life_time,
                 });
         }
 
-        let life_percent = block.life_time as f32 / LIFETIME as f32;
+        let mut c = variables.base_color;
+        let life_percent = block.life_time as f32 / variables.life_time as f32;
+        c.set_r(life_percent);
         let m = StandardMaterial {
-            base_color: Color::rgb(life_percent, 1., 1.),
-            emissive: Color::rgb(life_percent, life_percent, 1.),
+            base_color: c,
             ..default()
         };
         let _ = materials.set(material, m);

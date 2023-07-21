@@ -11,45 +11,14 @@ use update_block::update_block;
 
 use bevy::{core_pipeline::experimental::taa::TemporalAntiAliasPlugin, prelude::*};
 use bevy_egui::EguiPlugin;
-use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
+use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use update_settings::update_bloom_settings;
 
 #[derive(Resource)]
-struct KeyPressed {
-    pressed: bool,
-}
-
-const LIFETIME: i32 = 100;
-pub const SCALE: f32 = 3.;
-
-fn main() {
-    App::new()
-        .insert_resource(AmbientLight {
-            brightness: 3.0,
-            ..default()
-        })
-        .insert_resource(KeyPressed { pressed: false })
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_plugins(DefaultPlugins)
-        .add_plugins(TemporalAntiAliasPlugin)
-        .add_plugins(EguiPlugin)
-        .add_plugins(PanOrbitCameraPlugin)
-        .add_systems(Startup, setup)
-        .add_systems(Startup, spawn_block)
-        .add_systems(FixedUpdate, update_block)
-        .add_systems(Update, keyboard_input_system)
-        // .add_systems(Update, update_egui)
-        .add_systems(Update, update_bloom_settings)
-        .insert_resource(FixedTime::new_from_secs(0.02))
-        .run();
-}
-
-fn keyboard_input_system(keyboard_input: Res<Input<KeyCode>>, mut pressed: ResMut<KeyPressed>) {
-    if keyboard_input.just_pressed(KeyCode::Space) {
-        println!("Space pressed");
-        let cur = pressed.pressed;
-        pressed.pressed = !cur;
-    }
+pub struct Variables {
+    pub playing: bool,
+    pub life_time: i32,
+    pub base_color: Color,
 }
 
 #[derive(Clone)]
@@ -77,6 +46,20 @@ pub struct AutoCube {
     pub bounds: Bounds,
 }
 
+struct Temp(f32, f32, f32, f32);
+
+impl Into<Temp> for Color {
+    fn into(self) -> Temp {
+        Temp(self.r(), self.g(), self.b(), self.a())
+    }
+}
+
+impl Into<Color> for Temp {
+    fn into(self) -> Color {
+        Color::rgba(self.0, self.1, self.2, self.3)
+    }
+}
+
 impl Default for AutoCube {
     fn default() -> Self {
         AutoCube {
@@ -87,4 +70,34 @@ impl Default for AutoCube {
             ),
         }
     }
+}
+
+const LIFETIME: i32 = 100;
+pub const SCALE: f32 = 3.;
+
+fn main() {
+    let variables = Variables {
+        playing: true,
+        life_time: LIFETIME,
+        base_color: Color::rgb(0.0, 0.0, 0.0),
+    };
+
+    App::new()
+        .insert_resource(AmbientLight {
+            brightness: 3.0,
+            ..default()
+        })
+        .insert_resource(variables)
+        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .add_plugins(DefaultPlugins)
+        .add_plugins(TemporalAntiAliasPlugin)
+        .add_plugins(EguiPlugin)
+        .add_plugins(PanOrbitCameraPlugin)
+        .add_systems(Startup, setup)
+        .add_systems(Startup, spawn_block)
+        .add_systems(FixedUpdate, update_block)
+        .add_systems(Update, update_egui)
+        .add_systems(Update, update_bloom_settings)
+        .insert_resource(FixedTime::new_from_secs(0.02))
+        .run();
 }
