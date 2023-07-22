@@ -1,14 +1,11 @@
 use bevy::{
     core_pipeline::bloom::BloomSettings,
-    prelude::{Input, KeyCode, Query, Res, ResMut},
+    prelude::{Input, KeyCode, Query, Res},
     time::Time,
 };
 
-use crate::SelectedIndex;
-
 pub fn update_settings(
     mut camera: Query<&mut BloomSettings>,
-    mut index: ResMut<SelectedIndex>,
     keycode: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
@@ -43,10 +40,4 @@ pub fn update_settings(
     // ----------------------------------------
     // make selection to which block
     // ----------------------------------------
-    if keycode.pressed(KeyCode::Key1) {
-        index.0 = Some(0);
-    }
-    if keycode.pressed(KeyCode::Key2) {
-        index.0 = Some(1);
-    }
 }

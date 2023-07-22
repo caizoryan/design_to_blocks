@@ -26,6 +26,7 @@ pub fn spawn_block(
     ];
 
     for _ in 0..4 {
+        let mut index = 0;
         for bound in &bounds {
             commands
                 .spawn(PbrBundle {
@@ -44,8 +45,10 @@ pub fn spawn_block(
                 })
                 .insert(AutoCube {
                     bounds: bound.clone(),
+                    index,
                     ..default()
                 });
+            index += 1;
         }
     }
 }

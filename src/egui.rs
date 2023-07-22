@@ -1,34 +1,42 @@
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{self},
+    egui::{self, Widget},
     EguiContexts,
 };
 
-use crate::Variables;
+use crate::{ChunkStates, ColorChannels, SelectedIndex};
 
-pub fn update_egui(mut contexts: EguiContexts, mut variables: ResMut<Variables>) {
+pub fn update_egui(
+    mut contexts: EguiContexts,
+    mut variables: ResMut<ChunkStates>,
+    mut selected: ResMut<SelectedIndex>,
+) {
+    let index = match selected.0 {
+        Some(index) => index,
+        _ => return,
+    };
+
     let ctx = contexts.ctx_mut();
-
-    egui::Window::new("Cube material preview").show(ctx, |ui| {
+    let selected = egui::Window::new("Cube material preview").show(ctx, |ui| {
         egui::Grid::new("preview").show(ui, |ui| {
             ui.label("Base color:");
-            color_picker_widget(ui, &mut variables.base_color);
+            color_picker_widget(ui, &mut variables.0[index].base_color);
             ui.end_row();
 
-            // ui.label("Emissive:");
-            // color_picker_widget(ui, &mut material.emissive);
-            // ui.end_row();
+            ui.label("Scale");
+            egui::Slider::new(&mut variables.0[index].scale, 0.3..=20.0).ui(ui);
+            ui.end_row();
 
-            // ui.label("Perceptual roughness:");
-            // egui::Slider::new(&mut material.perceptual_roughness, 0.089..=1.0).ui(ui);
-            // ui.end_row();
-            //
-            // ui.label("Reflectance:");
-            // egui::Slider::new(&mut material.reflectance, 0.0..=1.0).ui(ui);
-            // ui.end_row();
-            //
+            ui.label("Perceptual roughness:");
+            egui::Slider::new(&mut variables.0[index].perceptual_roughness, 0.01..=1.0).ui(ui);
+            ui.end_row();
+
+            ui.selectable_value(&mut variables.0[index].inter_color, ColorChannels::R, "R");
+            ui.selectable_value(&mut variables.0[index].inter_color, ColorChannels::G, "G");
+            ui.selectable_value(&mut variables.0[index].inter_color, ColorChannels::B, "B");
+
             ui.label("Unlit:");
-            ui.checkbox(&mut variables.playing, "");
+            ui.checkbox(&mut variables.0[index].playing, "");
             ui.end_row();
         });
     });
