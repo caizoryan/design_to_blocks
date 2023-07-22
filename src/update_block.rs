@@ -32,7 +32,7 @@ pub fn update_block(
                         transform: Transform {
                             translation: get_random_direction(
                                 transform.translation,
-                                &block.bounds,
+                                &variables.bounds,
                                 variables.scale,
                             ),
                             // rotation: random_rotation,
@@ -41,7 +41,6 @@ pub fn update_block(
                         ..Default::default()
                     })
                     .insert(AutoCube {
-                        bounds: block.bounds.clone(),
                         life_time: variables.life_time,
                         index: block.index,
                     });

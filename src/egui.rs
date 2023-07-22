@@ -1,15 +1,15 @@
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{self, Widget},
+    egui::{self, InnerResponse, Widget},
     EguiContexts,
 };
 
-use crate::{ChunkStates, ColorChannels, SelectedIndex};
+use crate::{Bounds, ChunkStates, ColorChannels, SelectedIndex};
 
 pub fn update_egui(
     mut contexts: EguiContexts,
     mut variables: ResMut<ChunkStates>,
-    mut selected: ResMut<SelectedIndex>,
+    selected: Res<SelectedIndex>,
 ) {
     let index = match selected.0 {
         Some(index) => index,
@@ -17,8 +17,8 @@ pub fn update_egui(
     };
 
     let ctx = contexts.ctx_mut();
-    let selected = egui::Window::new("Cube material preview").show(ctx, |ui| {
-        egui::Grid::new("preview").show(ui, |ui| {
+    egui::Window::new("Cube material preview").show(ctx, |ui| {
+        let res = egui::Grid::new("preview").show(ui, |ui| {
             ui.label("Base color:");
             color_picker_widget(ui, &mut variables.0[index].base_color);
             ui.end_row();
@@ -34,12 +34,43 @@ pub fn update_egui(
             ui.selectable_value(&mut variables.0[index].inter_color, ColorChannels::R, "R");
             ui.selectable_value(&mut variables.0[index].inter_color, ColorChannels::G, "G");
             ui.selectable_value(&mut variables.0[index].inter_color, ColorChannels::B, "B");
-
-            ui.label("Unlit:");
-            ui.checkbox(&mut variables.0[index].playing, "");
             ui.end_row();
+
+            ui.selectable_value(&mut variables.0[index].playing, true, "Playing");
+            ui.selectable_value(&mut variables.0[index].playing, false, "Paused");
+
+            ui.end_row();
+            ui.columns(2, |ui| {
+                ui[0].label("Min:");
+                ui[0].add(location_edit_widget(&mut variables.0[index].bounds.0));
+                ui[0].end_row();
+
+                ui[1].label("Max:");
+                ui[1].add(location_edit_widget(&mut variables.0[index].bounds.1));
+                ui[1].end_row();
+            });
         });
+        res
     });
+}
+
+fn location_edit_widget(location: &mut Vec3) -> impl Widget + '_ {
+    move |ui: &mut egui::Ui| {
+        ui.vertical(|ui| {
+            ui.label("X:");
+            ui.add(egui::DragValue::new(&mut location.x));
+            ui.end_row();
+
+            ui.label("Y:");
+            ui.add(egui::DragValue::new(&mut location.y));
+            ui.end_row();
+
+            ui.label("Z:");
+            ui.add(egui::DragValue::new(&mut location.z));
+            ui.end_row();
+        })
+        .response
+    }
 }
 
 fn color_picker_widget(ui: &mut egui::Ui, color: &mut Color) -> egui::Response {

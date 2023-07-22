@@ -32,6 +32,7 @@ pub struct ChunkState {
     pub scale: f32,
     pub inter_color: ColorChannels,
     pub perceptual_roughness: f32,
+    pub bounds: Bounds,
 }
 
 #[derive(Clone)]
@@ -57,7 +58,6 @@ impl Into<Bounds> for Rect {
 pub struct AutoCube {
     pub index: usize,
     pub life_time: i32,
-    pub bounds: Bounds,
 }
 
 struct Temp(f32, f32, f32, f32);
@@ -79,7 +79,6 @@ impl Default for AutoCube {
         AutoCube {
             index: 0,
             life_time: LIFETIME,
-            bounds: Bounds(Vec3::new(10.0, 10.0, 10.0), Vec3::new(10.0, 10.0, 10.0)),
         }
     }
 }
@@ -103,6 +102,13 @@ fn main() {
         perceptual_roughness: 0.5,
         base_color: Color::rgb(0.09, 0.0, 0.0),
         inter_color: ColorChannels::R,
+        bounds: Rect {
+            x: -1.,
+            y: -1.,
+            w: 2.,
+            h: 4.,
+        }
+        .into(),
     };
 
     let block_2 = ChunkState {
@@ -112,6 +118,13 @@ fn main() {
         perceptual_roughness: 0.5,
         base_color: Color::rgb(0.0, 0.09, 0.0),
         inter_color: ColorChannels::G,
+        bounds: Rect {
+            x: 1.5,
+            y: 2.5,
+            w: 1.,
+            h: 3.,
+        }
+        .into(),
     };
 
     let chunk_states = ChunkStates(vec![block_1, block_2]);
